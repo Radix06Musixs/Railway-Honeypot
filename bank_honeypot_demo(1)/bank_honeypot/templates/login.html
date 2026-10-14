@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Net Banking Login - Aurora Bank{% endblock %}
+{% block body %}
+<form class="form" method="post" action="/login"><h2 style="margin-top:0">Net Banking Login</h2>
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<label>Customer ID</label><input name="username" autocomplete="username">
+<label>Password</label><input name="password" type="password" autocomplete="current-password">
+<button class="btn" style="width:100%">Log in</button>
+<p style="font-size:.9rem"><a href="/forgot">Forgot password?</a> &middot; <a href="/register">Open a new account</a></p>
+<p style="color:#5d6b7a;font-size:.85rem">Demo customers: <b>demo</b> / <b>Demo@123</b> &middot; <b>priya</b> / <b>Priya@2026</b></p></form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Open an Account - Aurora Bank{% endblock %}
+{% block body %}
+<form class="form" method="post" action="/register"><h2 style="margin-top:0">Open a Savings Account</h2>
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<label>Full name</label><input name="full_name" value="{{ form.get('full_name','') }}" autocomplete="name">
+<label>Customer ID (3-20 letters, numbers, _)</label><input name="username" value="{{ form.get('username','') }}" autocomplete="username">
+<label>E-mail</label><input name="email" type="email" value="{{ form.get('email','') }}" autocomplete="email">
+<label>Password (8+ chars, letters &amp; numbers)</label><input name="password" type="password" autocomplete="new-password">
+<label>Confirm password</label><input name="confirm" type="password" autocomplete="new-password">
+<button class="btn" style="width:100%">Create account</button>
+<p style="color:#5d6b7a;font-size:.85rem">Demo bank: new accounts get Rs 10,000 of play money. Already a customer? <a href="/login">Log in</a></p></form>
+{% endblock %}

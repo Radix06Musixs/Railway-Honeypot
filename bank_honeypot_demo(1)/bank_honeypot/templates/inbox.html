@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Demo Inbox - Aurora Bank{% endblock %}
+{% block body %}<main><h2>Demo Inbox</h2><p style="color:#5d6b7a">Stand-in for e-mail delivery (this is a demo project).</p>
+{% for m in mails %}<div class="card" style="margin-bottom:12px"><b>{{ m.subject }}</b><br><span style="color:#5d6b7a">To {{ m.to }} &middot; {{ m.ts }}</span>
+<pre style="white-space:pre-wrap;font:inherit;margin:8px 0 0">{{ m.body }}</pre></div>
+{% else %}<p>No mail yet.</p>{% endfor %}</main>{% endblock %}

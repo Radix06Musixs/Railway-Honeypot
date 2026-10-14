@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Honeypot SOC</title>
+<style>
+:root{--bg:#0b1220;--panel:#121c2e;--line:#22314b;--ink:#e6edf7;--mut:#8ba0bd;--g:#34d399;--y:#fbbf24;--o:#fb923c;--r:#f87171;--b:#60a5fa;--p:#a78bfa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line)}
+h1{font-size:1.05rem;margin:0}h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 10px}
+button{background:#1d2b44;color:var(--ink);border:1px solid var(--line);padding:7px 12px;border-radius:7px;cursor:pointer;margin-left:6px}
+.wrap{padding:18px 22px;display:grid;gap:16px}
+.pipe{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;border-top:3px solid var(--c)}
+.st b{display:block;font-size:1.35rem}.st span{color:var(--mut);font-size:.72rem}
+.grid{display:grid;gap:16px;grid-template-columns:1fr 1fr}.grid3{display:grid;gap:16px;grid-template-columns:320px 1fr}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto}
+table{border-collapse:collapse;width:100%}td,th{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:600;font-size:.75rem}
+.lv0{color:var(--g)}.lv1{color:var(--y)}.lv2{color:var(--o)}.lv3{color:var(--r)}
+.big{font-size:3rem;font-weight:800;line-height:1}.pill{padding:2px 8px;border-radius:99px;background:#1d2b44;font-size:.75rem}
+.bar{height:8px;background:#1d2b44;border-radius:5px;margin:3px 0 9px}.bar i{display:block;height:100%;border-radius:5px;background:var(--b)}
+.ev{font-family:ui-monospace,monospace;font-size:.78rem;max-height:300px;overflow:auto}.ev div{padding:2px 0;border-bottom:1px solid #182540}
+.mut{color:var(--mut)}li{margin:4px 0}ul{padding-left:18px;margin:0}
+@media(max-width:1000px){.pipe{grid-template-columns:repeat(2,1fr)}.grid,.grid3{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>🛡️ Adaptive Honeypot &mdash; SOC view <span class="mut" id="sub"></span></h1>
+<div><button onclick="location.href='/soc/report.json'">Download report</button><button onclick="reset()">Reset demo</button></div></header>
+<div class="wrap">
+<div class="pipe" id="pipe"></div>
+<div class="grid3">
+ <div class="panel"><h2>Resilience score</h2><div id="res"></div></div>
+ <div class="panel"><h2>Attacker / visitor sessions</h2><div id="sess"></div></div>
+</div>
+<div class="grid">
+ <div class="panel"><h2>Live interaction capture</h2><div class="ev" id="ev"></div></div>
+ <div class="panel"><h2>Feedback &amp; adaptation loop &mdash; insights</h2><ul id="ins"></ul>
+   <h2 style="margin-top:14px">Threat-intel knowledge base (<span id="kbn"></span>)</h2><div id="kb"></div></div>
+</div>
+<div class="grid">
+ <div class="panel"><h2>ML-based evaluation &mdash; offline (synthetic corpus)</h2><div id="ml"></div></div>
+ <div class="panel"><h2>ML-based evaluation &mdash; live (lab-labelled sessions)</h2><div id="live"></div>
+   <h2 style="margin-top:14px">Fake network services exposed</h2><div id="ports"></div></div>
+</div>
+</div>
+<script>
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+async function reset(){if(confirm('Clear all sessions, telemetry and KB?')){await fetch('/soc/api/reset',{method:'POST'});tick()}}
+function render(d){
+ const k=d.kpi;$('sub').textContent='· primary model: '+d.primary_model;
+ const st=[['1 Attacker',k.sessions,'sessions seen','#f87171'],['2 Honeypot',k.vms,'fake VMs live · '+k.tokens_issued+' honeytokens','#60a5fa'],
+  ['3 Telemetry',k.total,'events · '+(k.http||0)+' http · '+(k.port||0)+' port · '+(k.shell||0)+' shell','#34d399'],
+  ['4 Analytics',k.flagged,'sessions flagged (score≥0.5)','#a78bfa'],['5 ML eval',(d.resilience.score??'–'),'resilience score','#f472b6'],
+  ['6 Feedback',k.evolutions,'deception evolutions · KB '+d.kb_size,'#fbbf24'],['7 Reports',k.decoy_events,'decoy interactions','#2dd4bf']];
+ $('pipe').innerHTML=st.map(s=>`<div class="st" style="--c:${s[3]}"><span>${s[0]}</span><b>${s[1]}</b><span>${esc(s[2])}</span></div>`).join('');
+ const r=d.resilience,col={High:'g',Medium:'y',Low:'r'}[r.level]||'b';
+ $('res').innerHTML=`<div class="big" style="color:var(--${col})">${r.score??'–'}</div><div class="pill">${esc(r.level)}</div><div style="margin-top:12px">`+
+  Object.entries(r.components||{}).map(([n,v])=>`<div>${esc(n)} <span class="mut">${v}</span></div><div class="bar"><i style="width:${v*100}%"></i></div>`).join('')+'</div>';
+ $('sess').innerHTML='<table><tr><th>ID</th><th>Actor</th><th>Level</th><th>Score</th><th>Persona</th><th>Reqs</th><th>Decoys</th><th>Ports</th><th>Cmds</th><th>UA sw.</th><th>Rot.</th><th>Token</th><th>Emulating</th><th>Truth</th></tr>'+
+  d.sessions.map(s=>`<tr><td>${s.id}</td><td>${esc(s.actor)}</td><td class="lv${s.level}">L${s.level}</td><td>${s.score}</td><td>${esc(s.persona)}</td><td>${s.reqs}</td><td>${s.decoys}</td><td>${s.ports}</td><td>${s.cmds}</td><td>${s.ua_changes}</td><td>${s.rotations}</td><td>${s.token?'🔑':''}</td><td class="mut">${esc(s.profile)}</td><td class="mut">${s.truth}</td></tr>`).join('')+'</table>';
+ $('ev').innerHTML=d.events.map(e=>`<div><span class="mut">${new Date(e.ts*1000).toLocaleTimeString()}</span> <span class="lv${e.level}">L${e.level}</span> <b>${esc(e.source)}</b> ${esc(e.method)} ${esc(e.path)} <span class="mut">→${e.status} s=${e.score} ${esc(e.detail)}</span></div>`).join('');
+ $('ins').innerHTML=d.insights.length?d.insights.map(i=>`<li>${esc(i.text)}</li>`).join(''):'<li class="mut">No insights yet - run the attacker simulator.</li>';
+ $('kbn').textContent=d.kb_size+' entries';$('kb').innerHTML='<table>'+d.kb.map(x=>`<tr><td>${esc(x.key)}</td><td>${x.count}</td></tr>`).join('')+'</table>';
+ $('ml').innerHTML='<table><tr><th>Model</th><th>Acc</th><th>Prec</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr>'+d.offline_metrics.map(m=>`<tr><td>${esc(m.model)}${m.model==d.primary_model?' ★':''}</td><td>${m.accuracy}</td><td>${m.precision}</td><td>${m.recall}</td><td>${m.f1}</td><td>${m.roc_auc}</td></tr>`).join('')+`</table><p class="mut">Trained in ${d.train_seconds}s on synthetic personas. ★ = used for live scoring.</p>`;
+ const L=d.live_eval;$('live').innerHTML=L?`<table><tr><th>Sessions</th><th>TP</th><th>FP</th><th>TN</th><th>FN</th><th>Acc</th><th>Prec</th><th>Recall</th><th>F1</th><th>AUC</th></tr><tr><td>${L.sessions}</td><td>${L.tp}</td><td>${L.fp}</td><td>${L.tn}</td><td>${L.fn}</td><td>${L.accuracy}</td><td>${L.precision}</td><td>${L.recall}</td><td>${L.f1}</td><td>${L.roc_auc??'–'}</td></tr></table>`:'<span class="mut">Run the simulator (it labels its sessions) to see live metrics.</span>';
+ $('ports').innerHTML=d.ports.map(p=>`<span class="pill">${p.port}/${p.service}</span> `).join('')||'<span class="mut">none</span>';
+}
+async function tick(){try{const r=await fetch('/soc/api/state');if(r.ok)render(await r.json())}catch(e){}}
+tick();setInterval(tick,2000);
+</script></body></html>

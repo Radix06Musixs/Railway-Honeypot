@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Aurora Bank{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<nav><div class="logo">Aurora<span>Bank</span></div>
+<div><a href="/">Home</a><a href="/about">About</a>{% if session.get('uid') %}<a href="/dashboard">My Accounts</a><a href="/logout">Log out</a>{% else %}<a href="/login">Net Banking</a><a href="/register">Open Account</a>{% endif %}</div></nav>
+{% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="flash {{ 'err' if cat == 'err' else 'okf' }}">{{ m }}</div>{% endfor %}{% endwith %}
+{% block body %}{% endblock %}
+<footer>&copy; 2026 Aurora Bank &middot; Demo project - fictional bank, no real money or data.</footer>
+</body></html>

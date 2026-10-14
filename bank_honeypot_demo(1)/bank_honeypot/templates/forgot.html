@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Forgot Password - Aurora Bank{% endblock %}
+{% block body %}
+<form class="form" method="post" action="/forgot"><h2 style="margin-top:0">Forgot your password?</h2>
+<p style="color:#5d6b7a">Enter your Customer ID or registered e-mail. We will send a 6-digit code.</p>
+<label>Customer ID or e-mail</label><input name="identifier" autocomplete="username">
+<button class="btn" style="width:100%">Send code</button>
+<p style="font-size:.9rem"><a href="/login">Back to login</a></p></form>
+{% endblock %}

@@ -1,0 +1,6 @@
+flask>=3.0
+gunicorn>=22.0
+scikit-learn>=1.4
+numpy>=1.26
+requests>=2.31
+# optional: xgboost  (used automatically for the Gradient Boosting (XGBoost) model if present)

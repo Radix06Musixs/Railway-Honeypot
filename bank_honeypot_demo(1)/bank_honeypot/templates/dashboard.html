@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}My Accounts - Aurora Bank{% endblock %}
+{% block body %}<main>
+<h2>Welcome, {{ u.full_name }}</h2>
+<div class="card" style="margin-bottom:22px"><div style="color:#5d6b7a">Savings &middot; Account No. <b>{{ u.acct_no }}</b> <span style="font-size:.85rem">(share this to receive money)</span></div>
+<div class="bal">&#8377;{{ rupees(u.balance) }}</div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px">
+<div><h3>Transfer money</h3>
+<form method="post" action="/transfer" class="card"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<label>Beneficiary account number</label><input name="to" inputmode="numeric" style="width:100%;padding:10px;margin:4px 0 10px;border:1px solid #cdd6df;border-radius:8px">
+<label>Amount (&#8377;)</label><input name="amount" inputmode="decimal" style="width:100%;padding:10px;margin:4px 0 10px;border:1px solid #cdd6df;border-radius:8px">
+<label>Remarks</label><input name="note" maxlength="60" style="width:100%;padding:10px;margin:4px 0 12px;border:1px solid #cdd6df;border-radius:8px">
+<button class="btn">Send money</button></form></div>
+<div><h3>Recent transactions</h3>
+<table><tr><th>When</th><th>Details</th><th style="text-align:right">Amount</th></tr>
+{% for t in txns %}<tr><td>{{ t.ts }}</td><td>{{ t.note }}{% if t.other %}<br><small style="color:#5d6b7a">{{ 'from' if t.amount > 0 else 'to' }} {{ t.other }}</small>{% endif %}</td>
+<td style="text-align:right" class="{{ 'pos' if t.amount > 0 else 'neg' }}">{{ '+' if t.amount > 0 else '-' }}{{ rupees(t.amount|abs) }}</td></tr>{% endfor %}</table></div></div>
+</main>{% endblock %}
